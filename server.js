@@ -8,6 +8,9 @@ var db = require("./database.js")
 // Require md5 MODULE
 var md5 = require("md5")
 
+// Require a middleware extension for express 
+var bodyParser = require("body-parser");
+
 
 // Make Express use its own built-in body parser
 app.use(express.urlencoded({ extended: true }));
@@ -47,7 +50,7 @@ app.read("/app/user/:id", (req, res) => {
 // UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:idp
 app.patch("/app/update/user/:idp", (req, res)=> {
 	const stmt = db.prepare("UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?").run(req.user, req.pass);
-	res.status(200).json(req.user);
+	res.status(200).json(stmt);
 });
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
 app.delete("/app/delete/suer/:id", (req, res)=> {
