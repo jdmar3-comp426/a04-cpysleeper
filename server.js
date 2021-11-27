@@ -1,19 +1,26 @@
 // Define app using express
 var express = require("express")
 var app = express()
-// Require database SCRIPT file
 
+
+// Require database SCRIPT file
+var db = require("./database.js")
 // Require md5 MODULE
+var md5 = require("md5")
+
+// Require a middleware extension for express 
+var bodyParser = require("body-parser");
 
 // Make Express use its own built-in body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Set server port
-
+var HTTP_PORT = 5000 
 // Start server
 app.listen(HTTP_PORT, () => {
     console.log("Server running on port %PORT%".replace("%PORT%",HTTP_PORT))
+	console.log("Your API is working!")
 });
 // READ (HTTP method GET) at root endpoint /app/
 app.get("/app/", (req, res, next) => {
@@ -23,7 +30,10 @@ app.get("/app/", (req, res, next) => {
 
 // Define other CRUD API endpoints using express.js and better-sqlite3
 // CREATE a new user (HTTP method POST) at endpoint /app/new/
-
+app.post("/app/new", (req, res) => {
+	const stmt = db.prepare('INSERT INTO userinfo (user, pass) VALUES (?, ?)').run(req.user, req.pass);
+	res.status(201).json(stmt);
+});
 // READ a list of all users (HTTP method GET) at endpoint /app/users/
 app.get("/app/users", (req, res) => {	
 	const stmt = db.prepare("SELECT * FROM userinfo").all();
@@ -31,11 +41,21 @@ app.get("/app/users", (req, res) => {
 });
 
 // READ a single user (HTTP method GET) at endpoint /app/user/:id
+app.read("/app/user/:id", (req, res) => {
+	const stmt = db.prepare("SELECT * FROM userinfo WHERE id = ?").get();
+	res.status(200).json(stmt);
 
-// UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:id
-
+});
+// UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:idp
+app.patch("/app/update/user/:idp", (req, res)=> {
+	const stmt = db.prepare("UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?").run(req.user, req.pass);
+	res.status(200).json(req.user);
+});
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
-
+app.delete("/app/delete/suer/:id", (req, res)=> {
+	const stmt = db.prepare("DELETE FROM userinfo WHERE id = ?").run(req.user, req.pass);
+	res.status(200).json(stmt);
+});
 // Default response for any other request
 app.use(function(req, res){
 	res.json({"message":"Endpoint not found. (404)"});
