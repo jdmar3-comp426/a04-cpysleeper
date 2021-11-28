@@ -4,9 +4,9 @@ var app = express()
 
 
 // Require database SCRIPT file
-var db = require("./database.js")
+var db = require("./database.js");
 // Require md5 MODULE
-var md5 = require("md5")
+var md5 = require("md5");
 
 // Require a middleware extension for express 
 var bodyParser = require("body-parser");
@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Set server port
-var HTTP_PORT = 5000 
+var HTTP_PORT = 5000; 
 // Start server
 app.listen(HTTP_PORT, () => {
     console.log("Server running on port %PORT%".replace("%PORT%",HTTP_PORT))
@@ -30,24 +30,25 @@ app.get("/app/", (req, res, next) => {
 // Define other CRUD API endpoints using express.js and better-sqlite3
 // CREATE a new user (HTTP method POST) at endpoint /app/new/
 app.post("/app/new", (req, res) => {
-	const stmt = db.prepare('INSERT INTO userinfo (user, pass) VALUES (?, ?)').run(req.params.user, req.params.pass);
+	const stmt = db.prepare('INSERT INTO userinfo (user, pass) VALUES (?, ?)').run(req.params.user, md5
+		(req.params.pass));
 	res.status(200).json({"message":"1 record createed: ID 3 (201)"});
 });
 // READ a list of all users (HTTP method GET) at endpoint /app/users/
 app.get("/app/users", (req, res) => {	
 	const stmt = db.prepare("SELECT * FROM userinfo").all();
-	res.status(200).json({"message":"OK (200)"})
+	res.status(200).json(stmt)
 });
 
 // READ a single user (HTTP method GET) at endpoint /app/user/:id
-app.read("/app/user/:id", (req, res) => {
-	const stmt = db.prepare("SELECT * FROM userinfo WHERE id = ?").get();
-	res.status(200).json({"message":"OK (200)"})
+app.get("/app/user/:id", (req, res) => {
+	const stmt = db.prepare("SELECT * FROM userinfo WHERE id = ?").get(req.params.id);
+	res.status(200).json(stmt)
 
 });
 // UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:idp
 app.patch("/app/update/user/:idp", (req, res)=> {
-	const stmt = db.prepare("UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?").run(req.params.user, req.params.pass);
+	const stmt = db.prepare("UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?").run(req.params.user, md5(req.params.pass));
 	res.status(200).json({"message":"1 record updated: ID 2 (200)"})
 });
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
